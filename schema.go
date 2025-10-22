@@ -93,17 +93,21 @@ func (s *Schema) validateComparison(comp *Comparison) error {
 		return nil
 	}
 
-	if comp.Left != nil {
-		if comp.Left.Field != "" {
-			field := strings.TrimSpace(comp.Left.Field)
-			if !s.IsFieldAllowed(field) {
-				return fmt.Errorf("field '%s' is not allowed. Allowed fields: %v", field, s.AllowedFields())
-			}
-		} else if comp.Left.SubExpr != nil {
-			if err := s.validateOrExpr(comp.Left.SubExpr); err != nil {
-				return err
-			}
+	if comp.Left == nil {
+		return nil
+	}
+
+	// Validate field name
+	if comp.Left.Field != "" {
+		field := strings.TrimSpace(comp.Left.Field)
+		if !s.IsFieldAllowed(field) {
+			return fmt.Errorf("field '%s' is not allowed. Allowed fields: %v", field, s.AllowedFields())
 		}
+	}
+
+	// Validate subexpression
+	if comp.Left.SubExpr != nil {
+		return s.validateOrExpr(comp.Left.SubExpr)
 	}
 
 	return nil
