@@ -1,0 +1,252 @@
+package restql
+
+import (
+	"fmt"
+	"strings"
+)
+
+// QueryBuilder builds SQL queries from parsed filter expressions.
+type QueryBuilder struct {
+	table  string
+	fields []string
+	filter *Filter
+	sort   []string
+	limit  int
+	offset int
+	args   []any
+}
+
+// NewQueryBuilder creates a new query builder for the given table.
+func NewQueryBuilder(table string) *QueryBuilder {
+	return &QueryBuilder{
+		table: table,
+		args:  make([]any, 0),
+	}
+}
+
+// SetFields sets the fields to select.
+func (qb *QueryBuilder) SetFields(fields []string) *QueryBuilder {
+	qb.fields = fields
+	return qb
+}
+
+// SetFilter sets the filter expression.
+func (qb *QueryBuilder) SetFilter(filter *Filter) *QueryBuilder {
+	qb.filter = filter
+	return qb
+}
+
+// SetSort sets the sort fields.
+func (qb *QueryBuilder) SetSort(sort []string) *QueryBuilder {
+	qb.sort = sort
+	return qb
+}
+
+// SetLimit sets the limit.
+func (qb *QueryBuilder) SetLimit(limit int) *QueryBuilder {
+	qb.limit = limit
+	return qb
+}
+
+// SetOffset sets the offset.
+func (qb *QueryBuilder) SetOffset(offset int) *QueryBuilder {
+	qb.offset = offset
+	return qb
+}
+
+// ToSQL builds the complete SQL query and returns the SQL string and arguments.
+func (qb *QueryBuilder) ToSQL() (string, []any) {
+	qb.args = make([]any, 0) // Reset args
+
+	var sql strings.Builder
+
+	// SELECT clause
+	sql.WriteString("SELECT ")
+	if len(qb.fields) > 0 {
+		sql.WriteString(strings.Join(qb.fields, ", "))
+	} else {
+		sql.WriteString("*")
+	}
+
+	// FROM clause
+	sql.WriteString(" FROM ")
+	sql.WriteString(qb.table)
+
+	// WHERE clause
+	if qb.filter != nil && qb.filter.Expression != nil {
+		whereSQL := qb.buildOrExpr(qb.filter.Expression)
+		if whereSQL != "" {
+			sql.WriteString(" WHERE ")
+			sql.WriteString(whereSQL)
+		}
+	}
+
+	// ORDER BY clause
+	if len(qb.sort) > 0 {
+		sql.WriteString(" ORDER BY ")
+		orderClauses := make([]string, 0, len(qb.sort))
+		for _, s := range qb.sort {
+			if strings.HasPrefix(s, "-") {
+				orderClauses = append(orderClauses, s[1:]+" DESC")
+			} else {
+				orderClauses = append(orderClauses, s+" ASC")
+			}
+		}
+		sql.WriteString(strings.Join(orderClauses, ", "))
+	}
+
+	// LIMIT clause
+	if qb.limit > 0 {
+		sql.WriteString(fmt.Sprintf(" LIMIT %d", qb.limit))
+	}
+
+	// OFFSET clause
+	if qb.offset > 0 {
+		sql.WriteString(fmt.Sprintf(" OFFSET %d", qb.offset))
+	}
+
+	return sql.String(), qb.args
+}
+
+// Where builds only the WHERE clause.
+func (qb *QueryBuilder) Where() (string, []any) {
+	qb.args = make([]any, 0) // Reset args
+
+	if qb.filter == nil || qb.filter.Expression == nil {
+		return "", nil
+	}
+
+	whereSQL := qb.buildOrExpr(qb.filter.Expression)
+	return whereSQL, qb.args
+}
+
+// buildOrExpr builds SQL for OR expressions.
+func (qb *QueryBuilder) buildOrExpr(expr *OrExpr) string {
+	if expr == nil {
+		return ""
+	}
+
+	parts := make([]string, 0, len(expr.And))
+	for _, andExpr := range expr.And {
+		if sql := qb.buildAndExpr(andExpr); sql != "" {
+			parts = append(parts, sql)
+		}
+	}
+
+	if len(parts) == 0 {
+		return ""
+	}
+	if len(parts) == 1 {
+		return parts[0]
+	}
+
+	return "(" + strings.Join(parts, " OR ") + ")"
+}
+
+// buildAndExpr builds SQL for AND expressions.
+func (qb *QueryBuilder) buildAndExpr(expr *AndExpr) string {
+	if expr == nil {
+		return ""
+	}
+
+	parts := make([]string, 0, len(expr.Comparison))
+	for _, comp := range expr.Comparison {
+		if sql := qb.buildComparison(comp); sql != "" {
+			parts = append(parts, sql)
+		}
+	}
+
+	if len(parts) == 0 {
+		return ""
+	}
+	if len(parts) == 1 {
+		return parts[0]
+	}
+
+	return "(" + strings.Join(parts, " AND ") + ")"
+}
+
+// buildComparison builds SQL for comparison operations.
+func (qb *QueryBuilder) buildComparison(comp *Comparison) string {
+	if comp == nil {
+		return ""
+	}
+
+	// Handle subexpression in parentheses
+	if comp.Left != nil && comp.Left.SubExpr != nil {
+		return qb.buildOrExpr(comp.Left.SubExpr)
+	}
+
+	// Get field name
+	field := ""
+	if comp.Left != nil {
+		field = comp.Left.Field
+	}
+
+	if field == "" {
+		return ""
+	}
+
+	// Handle IS NULL / IS NOT NULL
+	if comp.Null != nil {
+		if comp.Null.IsNull {
+			return field + " IS NULL"
+		}
+		if comp.Null.IsNotNull {
+			return field + " IS NOT NULL"
+		}
+	}
+
+	// Handle regular operators
+	if comp.Op == nil || comp.Right == nil {
+		return ""
+	}
+
+	operator := comp.Op.String()
+
+	// Handle IN/NOT IN with arrays
+	if (comp.Op.In || comp.Op.NotIn) && comp.Right.Array != nil {
+		placeholders := make([]string, 0, len(comp.Right.Array.Values))
+		for _, val := range comp.Right.Array.Values {
+			qb.args = append(qb.args, qb.extractValue(val))
+			placeholders = append(placeholders, "?")
+		}
+		return field + " " + operator + " (" + strings.Join(placeholders, ", ") + ")"
+	}
+
+	// Handle regular comparison
+	value := qb.extractValue(comp.Right)
+	qb.args = append(qb.args, value)
+
+	return field + " " + operator + " ?"
+}
+
+// extractValue extracts the actual value from a Value node.
+func (qb *QueryBuilder) extractValue(val *Value) any {
+	if val == nil {
+		return nil
+	}
+
+	if val.String != nil {
+		// Remove quotes from string
+		s := *val.String
+		if len(s) >= 2 && (s[0] == '\'' || s[0] == '"') {
+			return s[1 : len(s)-1]
+		}
+		return s
+	}
+
+	if val.Int != nil {
+		return *val.Int
+	}
+
+	if val.Number != nil {
+		return *val.Number
+	}
+
+	if val.Boolean != nil {
+		return val.Boolean.Value()
+	}
+
+	return nil
+}
