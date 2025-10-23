@@ -11,7 +11,6 @@ import (
 	"github.com/lucasvillarinho/restql/schema"
 )
 
-// Re-export main types for convenience
 type (
 	// QueryBuilder builds SQL queries from parsed filter expressions.
 	QueryBuilder = builder.QueryBuilder
@@ -26,7 +25,6 @@ type (
 	QueryParams = query.QueryParams
 )
 
-// Re-export main functions for convenience
 var (
 	// NewSchema creates a new schema for the given table.
 	NewSchema = schema.NewSchema
