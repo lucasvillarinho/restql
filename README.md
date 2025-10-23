@@ -5,6 +5,7 @@ From REST filters to SQL queries
 [![License](https://img.shields.io/github/license/lucasvillarinho/noproblem)](https://github.com/lucasvillarinho/restql/blob/master/LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/lucasvillarinho/restql)](https://github.com/lucasvillarinho/restql)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lucasvillarinho/restql)](https://goreportcard.com/report/github.com/lucasvillarinho/restql)
+[![codecov](https://codecov.io/gh/lucasvillarinho/restql/branch/master/graph/badge.svg)](https://codecov.io/gh/lucasvillarinho/restql)
 
 RestQL is a Go library that converts REST query parameters into SQL queries with optional validation and security features. It provides a type-safe way to expose database filtering, sorting, and pagination through HTTP APIs.
 
