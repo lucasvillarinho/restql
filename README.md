@@ -1,6 +1,6 @@
-# 🔁 restQL
+# `🔁 restQL`
 
-> From REST filters to SQL queries
+From REST filters to SQL queries
 
 [![License](https://img.shields.io/github/license/lucasvillarinho/noproblem)](https://github.com/lucasvillarinho/restql/blob/master/LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/lucasvillarinho/restql)](https://github.com/lucasvillarinho/restql)
