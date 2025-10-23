@@ -80,6 +80,16 @@ if err != nil {
 // args: [18, "active"]
 ```
 
+## Query Parameters
+
+RestQL supports these URL query parameters:
+
+- `filter` - Filter expression (e.g., `age>18 && status='active'`)
+- `fields` - Comma-separated fields to select (e.g., `id,name,email`)
+- `sort` - Comma-separated sort fields, prefix with `-` for DESC (e.g., `-created_at,name`)
+- `limit` - Maximum number of results
+- `offset` - Number of results to skip
+
 ## Supported Operators
 
 ### Comparison Operators
@@ -112,16 +122,6 @@ if err != nil {
 - `&&` - AND
 - `||` - OR
 - `()` - Grouping
-
-## Query Parameters
-
-RestQL supports these URL query parameters:
-
-- `filter` - Filter expression (e.g., `age>18 && status='active'`)
-- `fields` - Comma-separated fields to select (e.g., `id,name,email`)
-- `sort` - Comma-separated sort fields, prefix with `-` for DESC (e.g., `-created_at,name`)
-- `limit` - Maximum number of results
-- `offset` - Number of results to skip
 
 ## Examples
 
