@@ -385,6 +385,8 @@ query.Validate(
 
 ## Integration Examples
 
+### ORMs
+
 <details>
 <summary><b>database/sql</b></summary>
 
@@ -517,6 +519,8 @@ func main() {
 ```
 
 </details>
+
+### HTTP Frameworks
 
 <details>
 <summary><b>Echo Framework</b></summary>
