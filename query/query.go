@@ -1,14 +1,12 @@
 package query
 
 import (
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/lucasvillarinho/restql/builder"
 	"github.com/lucasvillarinho/restql/parser"
-	"github.com/lucasvillarinho/restql/schema"
 )
 
 // Params holds parsed query parameters.
@@ -21,30 +19,40 @@ type Params struct {
 }
 
 // Parse parses URL query parameters and returns a QueryBuilder.
-func Parse(params url.Values, s *schema.Schema) (*builder.QueryBuilder, error) {
+// Validation is optional - use QueryBuilder.Validate() to enable it.
+func Parse(params url.Values, table string) (*builder.QueryBuilder, error) {
 	// Parse query parameters
 	qp := parseQueryParams(params)
-	qb := builder.NewQueryBuilder(s.Table())
+	qb := builder.NewQueryBuilder(table)
 
-	if err := parseAndSetFilter(qb, qp.Filter, s); err != nil {
+	// Parse and set filter (no validation)
+	if err := parseAndSetFilter(qb, qp.Filter); err != nil {
 		return nil, err
 	}
 
-	if err := validateAndSetFields(qb, qp.Fields, s); err != nil {
-		return nil, err
+	// Set fields (no validation)
+	if len(qp.Fields) > 0 {
+		qb.SetFields(qp.Fields)
 	}
 
-	if err := validateAndSetSort(qb, qp.Sort, s); err != nil {
-		return nil, err
+	// Set sort (no validation)
+	if len(qp.Sort) > 0 {
+		qb.SetSort(qp.Sort)
 	}
 
-	setPagination(qb, qp.Limit, qp.Offset)
+	// Set pagination
+	if qp.Limit > 0 {
+		qb.SetLimit(qp.Limit)
+	}
+	if qp.Offset > 0 {
+		qb.SetOffset(qp.Offset)
+	}
 
 	return qb, nil
 }
 
-// parseAndSetFilter parses and validates the filter, then sets it in the query builder.
-func parseAndSetFilter(qb *builder.QueryBuilder, filter string, s *schema.Schema) error {
+// parseAndSetFilter parses the filter and sets it in the query builder.
+func parseAndSetFilter(qb *builder.QueryBuilder, filter string) error {
 	if filter == "" {
 		return nil
 	}
@@ -54,58 +62,8 @@ func parseAndSetFilter(qb *builder.QueryBuilder, filter string, s *schema.Schema
 		return err
 	}
 
-	if err := s.ValidateFilter(parsedFilter); err != nil {
-		return err
-	}
-
 	qb.SetFilter(parsedFilter)
 	return nil
-}
-
-// validateAndSetFields validates the requested fields and sets them in the query builder.
-func validateAndSetFields(qb *builder.QueryBuilder, fields []string, s *schema.Schema) error {
-	if len(fields) == 0 {
-		return nil
-	}
-
-	if err := s.ValidateFields(fields); err != nil {
-		return err
-	}
-
-	qb.SetFields(fields)
-	return nil
-}
-
-// validateAndSetSort validates the sort fields and sets them in the query builder.
-func validateAndSetSort(qb *builder.QueryBuilder, sort []string, s *schema.Schema) error {
-	if len(sort) == 0 {
-		return nil
-	}
-
-	sortFields := make([]string, 0, len(sort))
-	for _, sortField := range sort {
-		// Extract field name (remove - prefix if present)
-		field := strings.TrimPrefix(sortField, "-")
-
-		// Validate field
-		if !s.IsFieldAllowed(field) {
-			return fmt.Errorf("field '%s' is not allowed. Allowed fields: %v", field, s.AllowedFields())
-		}
-		sortFields = append(sortFields, sortField)
-	}
-
-	qb.SetSort(sortFields)
-	return nil
-}
-
-// setPagination sets the limit and offset in the query builder.
-func setPagination(qb *builder.QueryBuilder, limit, offset int) {
-	if limit > 0 {
-		qb.SetLimit(limit)
-	}
-	if offset > 0 {
-		qb.SetOffset(offset)
-	}
 }
 
 // parseCommaSeparatedList splits a comma-separated string and trims each value.

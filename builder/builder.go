@@ -26,6 +26,21 @@ func NewQueryBuilder(table string) *QueryBuilder {
 	}
 }
 
+// Validate creates a validator for this query with the given options.
+// Use this to enable field whitelisting and limit/offset validation.
+func (qb *QueryBuilder) Validate(opts ...ValidateOption) *Validator {
+	v := &Validator{
+		qb:            qb,
+		allowedFields: make(map[string]bool),
+	}
+
+	for _, opt := range opts {
+		opt(v)
+	}
+
+	return v
+}
+
 // SetFields sets the fields to select.
 func (qb *QueryBuilder) SetFields(fields []string) *QueryBuilder {
 	qb.fields = fields
@@ -57,7 +72,8 @@ func (qb *QueryBuilder) SetOffset(offset int) *QueryBuilder {
 }
 
 // ToSQL builds the complete SQL query and returns the SQL string and arguments.
-func (qb *QueryBuilder) ToSQL() (string, []any) {
+// This method does not perform validation. Use Validate().ToSQL() for validated queries.
+func (qb *QueryBuilder) ToSQL() (string, []any, error) {
 	qb.args = make([]any, 0) // Reset args
 
 	var sql strings.Builder
@@ -107,7 +123,7 @@ func (qb *QueryBuilder) ToSQL() (string, []any) {
 		sql.WriteString(fmt.Sprintf(" OFFSET %d", qb.offset))
 	}
 
-	return sql.String(), qb.args
+	return sql.String(), qb.args, nil
 }
 
 // Where builds only the WHERE clause.

@@ -20,7 +20,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb := NewQueryBuilder("users")
 		qb.SetFilter(filter)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT * FROM users WHERE age = ?", sql)
 		assert.Len(t, args, 1)
@@ -35,7 +36,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb := NewQueryBuilder("users")
 		qb.SetFilter(filter)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT * FROM users WHERE age > ?", sql)
 		assert.Len(t, args, 1)
@@ -50,7 +52,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb := NewQueryBuilder("users")
 		qb.SetFilter(filter)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT * FROM users WHERE (age > ? AND status = ?)", sql)
 		assert.Len(t, args, 2)
@@ -65,7 +68,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb := NewQueryBuilder("users")
 		qb.SetFilter(filter)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT * FROM users WHERE (age > ? OR role = ?)", sql)
 		assert.Len(t, args, 2)
@@ -81,7 +85,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb.SetFilter(filter)
 		qb.SetFields([]string{"id", "name", "age"})
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT id, name, age FROM users WHERE age > ?", sql)
 		assert.Len(t, args, 1)
@@ -97,7 +102,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb.SetFilter(filter)
 		qb.SetSort([]string{"name"})
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT * FROM users WHERE age > ? ORDER BY name ASC", sql)
 		assert.Len(t, args, 1)
@@ -113,7 +119,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb.SetFilter(filter)
 		qb.SetSort([]string{"-created_at"})
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT * FROM users WHERE age > ? ORDER BY created_at DESC", sql)
 		assert.Len(t, args, 1)
@@ -129,7 +136,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb.SetFilter(filter)
 		qb.SetLimit(10)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT * FROM users WHERE age > ? LIMIT 10", sql)
 		assert.Len(t, args, 1)
@@ -145,7 +153,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb.SetFilter(filter)
 		qb.SetOffset(20)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT * FROM users WHERE age > ? OFFSET 20", sql)
 		assert.Len(t, args, 1)
@@ -164,7 +173,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb.SetLimit(10)
 		qb.SetOffset(20)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT id, name FROM users WHERE (age > ? AND status = ?) ORDER BY created_at DESC, name ASC LIMIT 10 OFFSET 20", sql)
 		assert.Len(t, args, 2)
@@ -179,7 +189,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb := NewQueryBuilder("users")
 		qb.SetFilter(filter)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT * FROM users WHERE deleted_at IS NULL", sql)
 		assert.Empty(t, args)
@@ -194,7 +205,8 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 		qb := NewQueryBuilder("users")
 		qb.SetFilter(filter)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT * FROM users WHERE status IN (?, ?)", sql)
 		assert.Len(t, args, 2)
@@ -231,7 +243,8 @@ func TestQueryBuilder_NoFilter(t *testing.T) {
 		qb.SetSort([]string{"-created_at"})
 		qb.SetLimit(10)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Equal(t, "SELECT id, name FROM users ORDER BY created_at DESC LIMIT 10", sql)
 		assert.Empty(t, args)
@@ -252,7 +265,8 @@ func TestQueryBuilder_ComplexNesting(t *testing.T) {
 		qb := NewQueryBuilder("users")
 		qb.SetFilter(ast)
 
-		sql, args := qb.ToSQL()
+		sql, args, err := qb.ToSQL()
+		require.NoError(t, err)
 
 		assert.Contains(t, sql, "WHERE")
 		assert.Len(t, args, 4)
