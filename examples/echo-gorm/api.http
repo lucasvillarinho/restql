@@ -1,0 +1,39 @@
+### RestQL Echo + GORM API
+@baseUrl = http://localhost:8080
+
+### Get all users
+GET {{baseUrl}}/users
+
+### Filter by status
+GET {{baseUrl}}/users?filter=status='active'
+
+### Comparison operators
+GET {{baseUrl}}/users?filter=age>=25
+
+### LIKE operator
+GET {{baseUrl}}/users?filter=name~'Silva'
+
+### IN operator
+GET {{baseUrl}}/users?filter=status IN ['active','pending']
+
+### AND operator
+GET {{baseUrl}}/users?filter=status='active'&&age>25
+
+### OR operator
+GET {{baseUrl}}/users?filter=status='active'||status='pending'
+
+### Complex filters with grouping
+GET {{baseUrl}}/users?filter=(status='active'&&age>25)||(status='pending'&&age>30)
+
+### Select specific fields
+GET {{baseUrl}}/users?fields=id,name,email
+
+### Sort results
+GET {{baseUrl}}/users?sort=-created_at,name
+
+### Pagination
+GET {{baseUrl}}/users?limit=5&offset=0
+
+### Complete example with all features
+GET {{baseUrl}}/users?fields=id,name,email,status,age&filter=status='active'&&age>=25&sort=-age&limit=10&offset=0
+
