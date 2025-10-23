@@ -1,4 +1,4 @@
-package restql
+package parser
 
 // Filter represents the root of the filter expression tree.
 type Filter struct {

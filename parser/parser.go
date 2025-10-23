@@ -1,4 +1,4 @@
-package restql
+package parser
 
 import (
 	"fmt"

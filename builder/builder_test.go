@@ -1,8 +1,9 @@
-package restql
+package builder
 
 import (
 	"testing"
 
+	"github.com/lucasvillarinho/restql/parser"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +13,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("simple equality", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age=18")
+		filter, err := parser.ParseFilter("age=18")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -27,7 +28,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("greater than", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age>18")
+		filter, err := parser.ParseFilter("age>18")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -42,7 +43,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("AND expression", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age>18 && status='active'")
+		filter, err := parser.ParseFilter("age>18 && status='active'")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -57,7 +58,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("OR expression", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age>18 || role='admin'")
+		filter, err := parser.ParseFilter("age>18 || role='admin'")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -72,7 +73,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("with fields", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age>18")
+		filter, err := parser.ParseFilter("age>18")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -88,7 +89,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("with sort ascending", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age>18")
+		filter, err := parser.ParseFilter("age>18")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -104,7 +105,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("with sort descending", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age>18")
+		filter, err := parser.ParseFilter("age>18")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -120,7 +121,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("with limit", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age>18")
+		filter, err := parser.ParseFilter("age>18")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -136,7 +137,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("with offset", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age>18")
+		filter, err := parser.ParseFilter("age>18")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -152,7 +153,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("full query", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age>18 && status='active'")
+		filter, err := parser.ParseFilter("age>18 && status='active'")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -171,7 +172,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("IS NULL", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("deleted_at IS NULL")
+		filter, err := parser.ParseFilter("deleted_at IS NULL")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -186,7 +187,7 @@ func TestQueryBuilder_ToSQL(t *testing.T) {
 	t.Run("IN operator", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("status IN ('active', 'pending')")
+		filter, err := parser.ParseFilter("status IN ('active', 'pending')")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -205,7 +206,7 @@ func TestQueryBuilder_Where(t *testing.T) {
 	t.Run("basic AND expression", func(t *testing.T) {
 		t.Parallel()
 
-		filter, err := ParseFilter("age>18 && status='active'")
+		filter, err := parser.ParseFilter("age>18 && status='active'")
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")
@@ -244,7 +245,7 @@ func TestQueryBuilder_ComplexNesting(t *testing.T) {
 
 		filter := "(age>18 && status='active') || (role='admin' && verified=true)"
 
-		ast, err := ParseFilter(filter)
+		ast, err := parser.ParseFilter(filter)
 		require.NoError(t, err)
 
 		qb := NewQueryBuilder("users")

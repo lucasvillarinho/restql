@@ -1,8 +1,10 @@
-package restql
+package schema
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/lucasvillarinho/restql/parser"
 )
 
 // Schema defines the allowed fields and table for a query.
@@ -57,14 +59,14 @@ func (s *Schema) ValidateFields(fields []string) error {
 }
 
 // ValidateFilter validates all fields used in the filter AST.
-func (s *Schema) ValidateFilter(filter *Filter) error {
+func (s *Schema) ValidateFilter(filter *parser.Filter) error {
 	if filter == nil || filter.Expression == nil {
 		return nil
 	}
 	return s.validateOrExpr(filter.Expression)
 }
 
-func (s *Schema) validateOrExpr(expr *OrExpr) error {
+func (s *Schema) validateOrExpr(expr *parser.OrExpr) error {
 	if expr == nil {
 		return nil
 	}
@@ -76,7 +78,7 @@ func (s *Schema) validateOrExpr(expr *OrExpr) error {
 	return nil
 }
 
-func (s *Schema) validateAndExpr(expr *AndExpr) error {
+func (s *Schema) validateAndExpr(expr *parser.AndExpr) error {
 	if expr == nil {
 		return nil
 	}
@@ -88,7 +90,7 @@ func (s *Schema) validateAndExpr(expr *AndExpr) error {
 	return nil
 }
 
-func (s *Schema) validateComparison(comp *Comparison) error {
+func (s *Schema) validateComparison(comp *parser.Comparison) error {
 	if comp == nil {
 		return nil
 	}
@@ -97,7 +99,6 @@ func (s *Schema) validateComparison(comp *Comparison) error {
 		return nil
 	}
 
-	// Validate field name
 	if comp.Left.Field != "" {
 		field := strings.TrimSpace(comp.Left.Field)
 		if !s.IsFieldAllowed(field) {
@@ -105,7 +106,6 @@ func (s *Schema) validateComparison(comp *Comparison) error {
 		}
 	}
 
-	// Validate subexpression
 	if comp.Left.SubExpr != nil {
 		return s.validateOrExpr(comp.Left.SubExpr)
 	}

@@ -1,15 +1,17 @@
-package restql
+package builder
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/lucasvillarinho/restql/parser"
 )
 
 // QueryBuilder builds SQL queries from parsed filter expressions.
 type QueryBuilder struct {
 	table  string
 	fields []string
-	filter *Filter
+	filter *parser.Filter
 	sort   []string
 	limit  int
 	offset int
@@ -31,7 +33,7 @@ func (qb *QueryBuilder) SetFields(fields []string) *QueryBuilder {
 }
 
 // SetFilter sets the filter expression.
-func (qb *QueryBuilder) SetFilter(filter *Filter) *QueryBuilder {
+func (qb *QueryBuilder) SetFilter(filter *parser.Filter) *QueryBuilder {
 	qb.filter = filter
 	return qb
 }
@@ -121,7 +123,7 @@ func (qb *QueryBuilder) Where() (string, []any) {
 }
 
 // buildOrExpr builds SQL for OR expressions.
-func (qb *QueryBuilder) buildOrExpr(expr *OrExpr) string {
+func (qb *QueryBuilder) buildOrExpr(expr *parser.OrExpr) string {
 	if expr == nil {
 		return ""
 	}
@@ -144,7 +146,7 @@ func (qb *QueryBuilder) buildOrExpr(expr *OrExpr) string {
 }
 
 // buildAndExpr builds SQL for AND expressions.
-func (qb *QueryBuilder) buildAndExpr(expr *AndExpr) string {
+func (qb *QueryBuilder) buildAndExpr(expr *parser.AndExpr) string {
 	if expr == nil {
 		return ""
 	}
@@ -167,7 +169,7 @@ func (qb *QueryBuilder) buildAndExpr(expr *AndExpr) string {
 }
 
 // buildComparison builds SQL for comparison operations.
-func (qb *QueryBuilder) buildComparison(comp *Comparison) string {
+func (qb *QueryBuilder) buildComparison(comp *parser.Comparison) string {
 	if comp == nil {
 		return ""
 	}
@@ -222,7 +224,7 @@ func (qb *QueryBuilder) buildComparison(comp *Comparison) string {
 }
 
 // extractValue extracts the actual value from a Value node.
-func (qb *QueryBuilder) extractValue(val *Value) any {
+func (qb *QueryBuilder) extractValue(val *parser.Value) any {
 	if val == nil {
 		return nil
 	}
