@@ -294,68 +294,6 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 
 </details>
 
-## Examples
-
-### Complex Filters
-
-```go
-// Nested conditions with OR and AND
-filter := "(age>=18 && status='active') || (role='admin' && verified=true)"
-params, _ := url.ParseQuery("filter=" + url.QueryEscape(filter))
-
-query, _ := restql.Parse(params, "users")
-sql, args, _ := query.ToSQL()
-
-// SELECT * FROM users WHERE ((age >= ? AND status = ?) OR (role = ? AND verified = ?))
-```
-
-### Field Selection
-
-```go
-params, _ := url.ParseQuery("fields=id,name,email&filter=age>18")
-
-sql, args, _ := restql.Parse(params, "users").ToSQL()
-
-// SELECT id, name, email FROM users WHERE age > ?
-```
-
-### Sorting
-
-```go
-params, _ := url.ParseQuery("sort=-created_at,name&limit=10")
-
-sql, args, _ := restql.Parse(params, "users").ToSQL()
-
-// SELECT * FROM users ORDER BY created_at DESC, name ASC LIMIT 10
-```
-
-### Full Example with Validation
-
-```go
-params, _ := url.ParseQuery(
-    "filter=(age>=21 && country='US')&" +
-    "fields=id,name,email&" +
-    "sort=-created_at&" +
-    "limit=50&" +
-    "offset=100",
-)
-
-sql, args, err := restql.Parse(params, "users").
-    Validate(
-        restql.WithAllowedFields([]string{
-            "id", "name", "email", "age", "country", "created_at",
-        }),
-        restql.WithMaxLimit(100),
-        restql.WithMaxOffset(1000),
-    ).
-    ToSQL()
-
-// SELECT id, name, email FROM users
-// WHERE (age >= ? AND country = ?)
-// ORDER BY created_at DESC
-// LIMIT 50 OFFSET 100
-```
-
 ## Security
 
 ### Field Whitelisting
