@@ -20,8 +20,8 @@ func NewHandler() *Handler {
 
 // GetUsers returns the list of users with RestQL filters
 func (h *Handler) GetUsers(c echo.Context) error {
-	// Get query parameters from Echo and pass to service
-	users, sqlQuery, args, err := h.userService.GetUsers(c.Request().Context(), c.QueryParams())
+	ctx := c.Request().Context()
+	users, sqlQuery, args, err := h.userService.GetUsers(ctx, c.QueryParams())
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": err.Error(),
@@ -29,7 +29,7 @@ func (h *Handler) GetUsers(c echo.Context) error {
 	}
 
 	// Return response with query info for debugging
-	return c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]any{
 		"data":  users,
 		"count": len(users),
 		"query": sqlQuery,

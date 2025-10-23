@@ -3,9 +3,10 @@ package builder
 import (
 	"testing"
 
-	"github.com/lucasvillarinho/restql/parser"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/lucasvillarinho/restql/parser"
 )
 
 func TestQueryBuilder_ToSQL(t *testing.T) {

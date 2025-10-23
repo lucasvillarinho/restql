@@ -22,7 +22,7 @@ type (
 	Filter = parser.Filter
 
 	// QueryParams holds parsed query parameters.
-	QueryParams = query.QueryParams
+	QueryParams = query.Params
 )
 
 var (
