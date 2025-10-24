@@ -41,9 +41,10 @@ func main() {
     // Create a RestQL instance
     rql := restql.NewRestQL()
 
+    // Parse the query parameters
     params, _ := url.ParseQuery("filter=age>18&limit=50")
 
-   
+    // Parse the query parameters and return a QueryBuilder
     query, err := rql.Parse(params, "users",
         restql.WithAllowedFields([]string{"id", "name", "email", "age"}),
         restql.WithMaxLimit(100),
