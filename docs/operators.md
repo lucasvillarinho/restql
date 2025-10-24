@@ -2,10 +2,32 @@
 
 This document provides a comprehensive guide to all operators supported by RestQL.
 
+## Table of Contents
+
+- [Comparison Operators](#comparison-operators)
+  - [Equal (=)](#equal-)
+  - [Not Equal (!=, <>)](#not-equal--)
+  - [Greater Than (>)](#greater-than-)
+  - [Less Than (<)](#less-than-)
+  - [Greater Than or Equal (>=)](#greater-than-or-equal-)
+  - [Less Than or Equal (<=)](#less-than-or-equal-)
+- [Pattern Matching](#pattern-matching)
+  - [LIKE (case-sensitive)](#like-case-sensitive)
+  - [NOT LIKE](#not-like)
+- [List Operations](#list-operations)
+  - [IN](#in)
+  - [NOT IN](#not-in)
+- [Null Checks](#null-checks)
+  - [IS NULL](#is-null)
+  - [IS NOT NULL](#is-not-null)
+- [Logical Operators](#logical-operators)
+  - [AND (&&)](#and-)
+  - [OR (||)](#or-)
+  - [Grouping ()](#grouping-)
+
 ## Comparison Operators
 
-<details>
-<summary><b>Equal (=)</b></summary>
+### Equal (=)
 
 ```go
 params, _ := url.ParseQuery("filter=status='active'")
@@ -14,10 +36,7 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // args: ["active"]
 ```
 
-</details>
-
-<details>
-<summary><b>Not Equal (!=, <>)</b></summary>
+### Not Equal (!=, <>)
 
 ```go
 params, _ := url.ParseQuery("filter=status!='inactive'")
@@ -26,10 +45,7 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // args: ["inactive"]
 ```
 
-</details>
-
-<details>
-<summary><b>Greater Than (>)</b></summary>
+### Greater Than (>)
 
 ```go
 params, _ := url.ParseQuery("filter=age>18")
@@ -38,10 +54,7 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // args: [18]
 ```
 
-</details>
-
-<details>
-<summary><b>Less Than (<)</b></summary>
+### Less Than (<)
 
 ```go
 params, _ := url.ParseQuery("filter=price<100")
@@ -50,10 +63,7 @@ sql, args, _ := restql.Parse(params, "products").ToSQL()
 // args: [100]
 ```
 
-</details>
-
-<details>
-<summary><b>Greater Than or Equal (>=)</b></summary>
+### Greater Than or Equal (>=)
 
 ```go
 params, _ := url.ParseQuery("filter=rating>=4.5")
@@ -62,10 +72,7 @@ sql, args, _ := restql.Parse(params, "reviews").ToSQL()
 // args: [4.5]
 ```
 
-</details>
-
-<details>
-<summary><b>Less Than or Equal (<=)</b></summary>
+### Less Than or Equal (<=)
 
 ```go
 params, _ := url.ParseQuery("filter=stock<=10")
@@ -74,12 +81,9 @@ sql, args, _ := restql.Parse(params, "products").ToSQL()
 // args: [10]
 ```
 
-</details>
-
 ## Pattern Matching
 
-<details>
-<summary><b>LIKE (case-sensitive)</b></summary>
+### LIKE (case-sensitive)
 
 ```go
 params, _ := url.ParseQuery("filter=name LIKE '%John%'")
@@ -88,10 +92,7 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // args: ["%John%"]
 ```
 
-</details>
-
-<details>
-<summary><b>NOT LIKE</b></summary>
+### NOT LIKE
 
 ```go
 params, _ := url.ParseQuery("filter=name NOT LIKE '%test%'")
@@ -100,12 +101,9 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // args: ["%test%"]
 ```
 
-</details>
-
 ## List Operations
 
-<details>
-<summary><b>IN</b></summary>
+### IN
 
 ```go
 params, _ := url.ParseQuery("filter=status IN ('active','pending','approved')")
@@ -114,10 +112,7 @@ sql, args, _ := restql.Parse(params, "orders").ToSQL()
 // args: ["active", "pending", "approved"]
 ```
 
-</details>
-
-<details>
-<summary><b>NOT IN</b></summary>
+### NOT IN
 
 ```go
 params, _ := url.ParseQuery("filter=role NOT IN ('admin','superadmin')")
@@ -126,12 +121,9 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // args: ["admin", "superadmin"]
 ```
 
-</details>
-
 ## Null Checks
 
-<details>
-<summary><b>IS NULL</b></summary>
+### IS NULL
 
 ```go
 params, _ := url.ParseQuery("filter=deleted_at IS NULL")
@@ -140,10 +132,7 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // args: []
 ```
 
-</details>
-
-<details>
-<summary><b>IS NOT NULL</b></summary>
+### IS NOT NULL
 
 ```go
 params, _ := url.ParseQuery("filter=email IS NOT NULL")
@@ -152,12 +141,9 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // args: []
 ```
 
-</details>
-
 ## Logical Operators
 
-<details>
-<summary><b>AND (&&)</b></summary>
+### AND (&&)
 
 ```go
 params, _ := url.ParseQuery("filter=age>=18 && status='active'")
@@ -166,10 +152,7 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // args: [18, "active"]
 ```
 
-</details>
-
-<details>
-<summary><b>OR (||)</b></summary>
+### OR (||)
 
 ```go
 params, _ := url.ParseQuery("filter=role='admin' || role='moderator'")
@@ -178,10 +161,7 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // args: ["admin", "moderator"]
 ```
 
-</details>
-
-<details>
-<summary><b>Grouping ()</b></summary>
+### Grouping ()
 
 ```go
 params, _ := url.ParseQuery("filter=(age>=18 && country='US') || (age>=21 && country='UK')")
@@ -189,6 +169,4 @@ sql, args, _ := restql.Parse(params, "users").ToSQL()
 // SELECT * FROM users WHERE ((age >= ? AND country = ?) OR (age >= ? AND country = ?))
 // args: [18, "US", 21, "UK"]
 ```
-
-</details>
 

@@ -2,6 +2,14 @@
 
 RestQL provides several security features to protect your application from unauthorized data access and excessive resource usage.
 
+## Table of Contents
+
+- [Field Whitelisting](#field-whitelisting)
+- [Limit Protection](#limit-protection)
+- [SQL Injection Protection](#sql-injection-protection)
+- [Complete Example: Production-Ready Configuration](#complete-example-production-ready-configuration)
+- [Best Practices](#best-practices)
+
 ## Field Whitelisting
 
 Always validate fields in production to prevent unauthorized data access. This ensures that users can only query, select, or sort by approved fields.
