@@ -1,6 +1,6 @@
 # `↔️ restQL`
 
-From REST filters to SQL queries
+From REST to SQL queries
 
 [![Go Version](https://img.shields.io/github/go-mod/go-version/lucasvillarinho/restql)](https://github.com/lucasvillarinho/restql)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lucasvillarinho/restql)](https://goreportcard.com/report/github.com/lucasvillarinho/restql)
