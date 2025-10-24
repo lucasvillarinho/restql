@@ -1,4 +1,4 @@
-# `🔁 restQL`
+# `↔️ restQL`
 
 From REST filters to SQL queries
 
