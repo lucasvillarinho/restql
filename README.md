@@ -41,9 +41,9 @@ func main() {
     // Create a RestQL instance
     rql := restql.NewRestQL()
 
-    // Parse queries with validation options per endpoint
     params, _ := url.ParseQuery("filter=age>18&limit=50")
 
+   
     query, err := rql.Parse(params, "users",
         restql.WithAllowedFields([]string{"id", "name", "email", "age"}),
         restql.WithMaxLimit(100),
@@ -160,18 +160,6 @@ params, _ := url.ParseQuery("filter=name LIKE '%John%'")
 sql, args, _ := restql.Parse(params, "users").ToSQL()
 // SELECT * FROM users WHERE name LIKE ?
 // args: ["%John%"]
-```
-
-</details>
-
-<details>
-<summary><b>ILIKE (case-insensitive)</b></summary>
-
-```go
-params, _ := url.ParseQuery("filter=email ILIKE '%@gmail.com'")
-sql, args, _ := restql.Parse(params, "users").ToSQL()
-// SELECT * FROM users WHERE email ILIKE ?
-// args: ["%@gmail.com"]
 ```
 
 </details>

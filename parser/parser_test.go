@@ -241,26 +241,6 @@ func TestParseFilter_Operators(t *testing.T) {
 		assert.Equal(t, "LIKE", comparison.Op.String())
 	})
 
-	t.Run("ILIKE operator uppercase", func(t *testing.T) {
-		t.Parallel()
-		result, err := ParseFilter("email ILIKE '%@gmail.com'")
-
-		require.NoError(t, err)
-		comparison := result.Expression.And[0].Comparison[0]
-		assert.True(t, comparison.Op.ILike)
-		assert.Equal(t, "ILIKE", comparison.Op.String())
-	})
-
-	t.Run("ILIKE operator lowercase", func(t *testing.T) {
-		t.Parallel()
-		result, err := ParseFilter("email ilike '%@gmail.com'")
-
-		require.NoError(t, err)
-		comparison := result.Expression.And[0].Comparison[0]
-		assert.True(t, comparison.Op.ILike)
-		assert.Equal(t, "ILIKE", comparison.Op.String())
-	})
-
 	t.Run("NOT LIKE operator uppercase", func(t *testing.T) {
 		t.Parallel()
 		result, err := ParseFilter("name NOT LIKE '%test%'")
@@ -633,7 +613,6 @@ func TestOperator_String(t *testing.T) {
 		{"greater or equal", Operator{GreaterOrEqual: true}, ">="},
 		{"less or equal", Operator{LessOrEqual: true}, "<="},
 		{"like", Operator{Like: true}, "LIKE"},
-		{"ilike", Operator{ILike: true}, "ILIKE"},
 		{"not like", Operator{NotLike: true}, "NOT LIKE"},
 		{"in", Operator{In: true}, "IN"},
 		{"not in", Operator{NotIn: true}, "NOT IN"},

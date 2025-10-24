@@ -38,7 +38,6 @@ type Operator struct {
 	Greater        bool `parser:"| @\">\""`
 	Less           bool `parser:"| @\"<\""`
 	Like           bool `parser:"| @(\"LIKE\" | \"like\")"`
-	ILike          bool `parser:"| @(\"ILIKE\" | \"ilike\")"`
 	NotLike        bool `parser:"| @(\"NOT\" \"LIKE\" | \"not\" \"like\")"`
 	In             bool `parser:"| @(\"IN\" | \"in\")"`
 	NotIn          bool `parser:"| @(\"NOT\" \"IN\" | \"not\" \"in\")"`
@@ -62,8 +61,6 @@ func (o *Operator) String() string {
 		return "<"
 	case o.Like:
 		return "LIKE"
-	case o.ILike:
-		return "ILIKE"
 	case o.NotLike:
 		return "NOT LIKE"
 	case o.In:
