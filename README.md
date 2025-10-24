@@ -25,9 +25,10 @@ go get github.com/lucasvillarinho/restql
 
 ## Quick Start
 
-### Basic Usage (Without Validation)
+### Basic Usage
 
 ```go
+
 package main
 
 import (
@@ -38,11 +39,17 @@ import (
 )
 
 func main() {
-    // Parse query string
-    params, _ := url.ParseQuery("filter=(age>=18)&sort=-created_at&limit=10")
+    // Create a RestQL instance
+    rql := restql.NewRestQL()
 
-    // Build SQL query
-    query, err := restql.Parse(params, "users")
+    // Parse queries with validation options per endpoint
+    params, _ := url.ParseQuery("filter=age>18&limit=50")
+
+    query, err := rql.Parse(params, "users",
+        restql.WithAllowedFields([]string{"id", "name", "email", "age"}),
+        restql.WithMaxLimit(100),
+        restql.WithMaxOffset(1000),
+    )
     if err != nil {
         log.Fatal(err)
     }
@@ -52,33 +59,10 @@ func main() {
         log.Fatal(err)
     }
 
-    // Use with your database
-    // db.Query(sql, args...)
-    // Output: SELECT * FROM users WHERE age >= ? ORDER BY created_at DESC LIMIT 10
-}
-```
-
-### With Validation
-
-```go
-// Parse and validate in one fluent chain
-params, _ := url.ParseQuery("filter=(age>=18 && status='active')&limit=1000")
-
-sql, args, err := restql.Parse(params, "users").
-    Validate(
-        restql.WithAllowedFields([]string{"age", "status", "name", "email"}),
-        restql.WithMaxLimit(100),
-        restql.WithMaxOffset(1000),
-    ).
-    ToSQL()
-
-if err != nil {
-    // Validation failed - field not allowed or limit exceeded
-    log.Fatal(err)
+    // sql: SELECT * FROM users WHERE age > ? LIMIT 50
+    // args: [18]
 }
 
-// sql: SELECT * FROM users WHERE (age >= ? AND status = ?) LIMIT 100
-// args: [18, "active"]
 ```
 
 ## Query Parameters
@@ -462,7 +446,7 @@ func main() {
 ### HTTP Frameworks
 
 <details>
-<summary><b>Echo Framework</b></summary>
+<summary><b>Echo Framework (with NewRestQL for reusable config)</b></summary>
 
 ```go
 package main
@@ -484,40 +468,63 @@ type User struct {
     Status string `json:"status"`
 }
 
+type Product struct {
+    ID    int    `json:"id"`
+    Name  string `json:"name"`
+    Price float64 `json:"price"`
+}
+
 func main() {
     e := echo.New()
     db, _ := sql.Open("postgres", "connection-string")
     defer db.Close()
 
-    e.GET("/users", func(c echo.Context) error {
-        allowedFields := []string{"id", "name", "email", "age", "status", "created_at"}
+    // Create reusable RestQL instance
+    rql := restql.NewRestQL()
 
-        sql, args, err := restql.Parse(c.QueryParams(), "users").
-            Validate(
-                restql.WithAllowedFields(allowedFields),
-                restql.WithMaxLimit(100),
-                restql.WithMaxOffset(1000),
-            ).
-            ToSQL()
+    // Users endpoint - with validation
+    e.GET("/users", func(c echo.Context) error {
+        sql, args, err := rql.Parse(c.QueryParams(), "users",
+            restql.WithAllowedFields([]string{"id", "name", "email", "age", "status", "created_at"}),
+            restql.WithMaxLimit(100),
+            restql.WithMaxOffset(1000),
+        ).ToSQL()
 
         if err != nil {
-            return c.JSON(http.StatusBadRequest, map[string]string{
-                "error": err.Error(),
-            })
+            return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
         }
 
         rows, err := db.Query(sql, args...)
         if err != nil {
-            return c.JSON(http.StatusInternalServerError, map[string]string{
-                "error": "Database error",
-            })
+            return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
         }
         defer rows.Close()
 
         var users []User
         // Scan rows into users...
-
         return c.JSON(http.StatusOK, users)
+    })
+
+    // Products endpoint - different validation rules
+    e.GET("/products", func(c echo.Context) error {
+        sql, args, err := rql.Parse(c.QueryParams(), "products",
+            restql.WithAllowedFields([]string{"id", "name", "price", "category"}),
+            restql.WithMaxLimit(50),  // Different limit for products
+        ).ToSQL()
+
+        if err != nil {
+            return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+        }
+
+        rows, err := db.Query(sql, args...)
+        if err != nil {
+            return c.JSON(http.StatusInternalServerError, map[string]string{"error": "Database error"})
+        }
+        defer rows.Close()
+
+        var products []Product
+        // Scan rows into products...
+        return c.JSON(http.StatusOK, products)
     })
 
     e.Logger.Fatal(e.Start(":8080"))
