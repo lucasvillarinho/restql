@@ -9,21 +9,41 @@ import (
 
 // QueryBuilder builds SQL queries from parsed filter expressions.
 type QueryBuilder struct {
-	table  string
-	fields []string
-	filter *parser.Filter
-	sort   []string
-	limit  int
-	offset int
-	args   []any
+	table            string
+	fields           []string
+	filter           *parser.Filter
+	sort             []string
+	limit            int
+	offset           int
+	args             []any
+	placeholderStyle string // Placeholder style: "?", "$1", ":1", etc.
+	placeholderCount int    // Counter for numbered placeholders
 }
 
 // NewQueryBuilder creates a new query builder for the given table.
 func NewQueryBuilder(table string) *QueryBuilder {
 	return &QueryBuilder{
-		table: table,
-		args:  make([]any, 0),
+		table:            table,
+		args:             make([]any, 0),
+		placeholderStyle: "?", // Default to MySQL/SQLite style
 	}
+}
+
+// SetPlaceholder sets the placeholder style for this query builder.
+func (qb *QueryBuilder) SetPlaceholder(style string) *QueryBuilder {
+	qb.placeholderStyle = style
+	return qb
+}
+
+// getPlaceholder returns the next placeholder string based on the configured style.
+func (qb *QueryBuilder) getPlaceholder() string {
+	if qb.placeholderStyle == "?" {
+		return "?"
+	}
+
+	// For numbered placeholders like $1, $2, ... or :1, :2, ...
+	qb.placeholderCount++
+	return fmt.Sprintf("%s%d", qb.placeholderStyle[:1], qb.placeholderCount)
 }
 
 // Validate creates a validator for this query with the given options.
@@ -75,6 +95,7 @@ func (qb *QueryBuilder) SetOffset(offset int) *QueryBuilder {
 // This method does not perform validation. Use Validate().ToSQL() for validated queries.
 func (qb *QueryBuilder) ToSQL() (string, []any, error) {
 	qb.args = make([]any, 0) // Reset args
+	qb.placeholderCount = 0  // Reset placeholder counter
 
 	var sql strings.Builder
 
@@ -129,6 +150,7 @@ func (qb *QueryBuilder) ToSQL() (string, []any, error) {
 // Where builds only the WHERE clause.
 func (qb *QueryBuilder) Where() (string, []any) {
 	qb.args = make([]any, 0) // Reset args
+	qb.placeholderCount = 0  // Reset placeholder counter
 
 	if qb.filter == nil || qb.filter.Expression == nil {
 		return "", nil
@@ -227,7 +249,7 @@ func (qb *QueryBuilder) buildComparison(comp *parser.Comparison) string {
 		placeholders := make([]string, 0, len(comp.Right.Array.Values))
 		for _, val := range comp.Right.Array.Values {
 			qb.args = append(qb.args, qb.extractValue(val))
-			placeholders = append(placeholders, "?")
+			placeholders = append(placeholders, qb.getPlaceholder())
 		}
 		return field + " " + operator + " (" + strings.Join(placeholders, ", ") + ")"
 	}
@@ -236,7 +258,7 @@ func (qb *QueryBuilder) buildComparison(comp *parser.Comparison) string {
 	value := qb.extractValue(comp.Right)
 	qb.args = append(qb.args, value)
 
-	return field + " " + operator + " ?"
+	return field + " " + operator + " " + qb.getPlaceholder()
 }
 
 // extractValue extracts the actual value from a Value node.

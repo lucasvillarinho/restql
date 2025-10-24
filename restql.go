@@ -60,11 +60,26 @@ var (
 // Used for global application-level settings like SQL dialect, placeholder style, etc.
 type Option func(*RestQL)
 
+// WithPlaceholder sets the SQL placeholder style.
+// Common values:
+//   - "?" for MySQL, SQLite (default)
+//   - "$1" for PostgreSQL (numbered placeholders)
+//   - ":1" for Oracle (numbered placeholders)
+//
+// Example:
+//
+//	rql := restql.NewRestQL(restql.WithPlaceholder("$1"))
+func WithPlaceholder(style string) Option {
+	return func(r *RestQL) {
+		r.placeholderStyle = style
+	}
+}
+
 // RestQL holds global configuration for query parsing.
 // Use NewRestQL to create an instance with default options that can be
 // reused across multiple Parse calls.
 type RestQL struct {
-	// Future: placeholder style, SQL dialect, naming strategy, logger, etc.
+	placeholderStyle string // Placeholder style: "?" (MySQL/SQLite), "$1" (PostgreSQL), ":1" (Oracle)
 }
 
 // NewRestQL creates a new RestQL instance with global configuration options.
@@ -74,15 +89,16 @@ type RestQL struct {
 // Example:
 //
 //	rql := restql.NewRestQL(
-//	    // Future: restql.WithPlaceholder("$1"),
-//	    // Future: restql.WithDialect("postgres"),
+//	    restql.WithPlaceholder("$1"), // PostgreSQL style
 //	)
 //	query, err := rql.Parse(params, "users",
 //	    restql.WithAllowedFields([]string{"id", "name", "email"}),
 //	    restql.WithMaxLimit(100),
 //	)
 func NewRestQL(opts ...Option) *RestQL {
-	rql := &RestQL{}
+	rql := &RestQL{
+		placeholderStyle: "?", // Default to MySQL/SQLite style
+	}
 
 	for _, opt := range opts {
 		opt(rql)
@@ -111,6 +127,9 @@ func (r *RestQL) Parse(params url.Values, table string, opts ...ValidateOption) 
 	if err != nil {
 		return nil, err
 	}
+
+	// Apply global configuration
+	qb.SetPlaceholder(r.placeholderStyle)
 
 	// If validation options are provided, apply them
 	if len(opts) > 0 {

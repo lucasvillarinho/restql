@@ -19,14 +19,13 @@ func TestNewRestQL(t *testing.T) {
 		assert.NotNil(t, rql)
 	})
 
-	// Future: when Option types are implemented, test them here
-	// Example:
-	// t.Run("creates instance with dialect option", func(t *testing.T) {
-	//     rql := restql.NewRestQL(
-	//         restql.WithDialect("postgres"),
-	//     )
-	//     assert.NotNil(t, rql)
-	// })
+	t.Run("creates instance with placeholder option", func(t *testing.T) {
+		t.Parallel()
+		rql := restql.NewRestQL(
+			restql.WithPlaceholder("$1"),
+		)
+		assert.NotNil(t, rql)
+	})
 }
 
 func TestRestQL_Parse(t *testing.T) {
@@ -232,5 +231,113 @@ func TestRestQL_Compatibility(t *testing.T) {
 
 		assert.Equal(t, sql1, sql2)
 		assert.Equal(t, args1, args2)
+	})
+}
+
+func TestRestQL_WithPlaceholder(t *testing.T) {
+	t.Parallel()
+
+	t.Run("uses default ? placeholder", func(t *testing.T) {
+		t.Parallel()
+		rql := restql.NewRestQL()
+
+		filterExpr := url.QueryEscape("age>18 && status='active'")
+		params, err := url.ParseQuery("filter=" + filterExpr)
+		require.NoError(t, err)
+
+		query, err := rql.Parse(params, "users")
+		require.NoError(t, err)
+
+		sql, args, err := query.ToSQL()
+		require.NoError(t, err)
+		assert.Contains(t, sql, "WHERE (age > ? AND status = ?)")
+		assert.Equal(t, []any{18, "active"}, args)
+	})
+
+	t.Run("uses PostgreSQL $1 placeholder style", func(t *testing.T) {
+		t.Parallel()
+		rql := restql.NewRestQL(restql.WithPlaceholder("$1"))
+
+		filterExpr := url.QueryEscape("age>18 && status='active'")
+		params, err := url.ParseQuery("filter=" + filterExpr)
+		require.NoError(t, err)
+
+		query, err := rql.Parse(params, "users")
+		require.NoError(t, err)
+
+		sql, args, err := query.ToSQL()
+		require.NoError(t, err)
+		assert.Contains(t, sql, "WHERE (age > $1 AND status = $2)")
+		assert.Equal(t, []any{18, "active"}, args)
+	})
+
+	t.Run("uses Oracle :1 placeholder style", func(t *testing.T) {
+		t.Parallel()
+		rql := restql.NewRestQL(restql.WithPlaceholder(":1"))
+
+		params, err := url.ParseQuery("filter=name='John'")
+		require.NoError(t, err)
+
+		query, err := rql.Parse(params, "users")
+		require.NoError(t, err)
+
+		sql, args, err := query.ToSQL()
+		require.NoError(t, err)
+		assert.Contains(t, sql, "WHERE name = :1")
+		assert.Equal(t, []any{"John"}, args)
+	})
+
+	t.Run("handles IN clause with PostgreSQL placeholders", func(t *testing.T) {
+		t.Parallel()
+		rql := restql.NewRestQL(restql.WithPlaceholder("$1"))
+
+		params, err := url.ParseQuery("filter=status IN ('active','pending','approved')")
+		require.NoError(t, err)
+
+		query, err := rql.Parse(params, "orders")
+		require.NoError(t, err)
+
+		sql, args, err := query.ToSQL()
+		require.NoError(t, err)
+		assert.Contains(t, sql, "WHERE status IN ($1, $2, $3)")
+		assert.Equal(t, []any{"active", "pending", "approved"}, args)
+	})
+
+	t.Run("handles complex query with numbered placeholders", func(t *testing.T) {
+		t.Parallel()
+		rql := restql.NewRestQL(restql.WithPlaceholder("$1"))
+
+		filterExpr := url.QueryEscape("(age>=18 && status='active') || role='admin'")
+		queryStr := "filter=" + filterExpr
+		params, err := url.ParseQuery(queryStr)
+		require.NoError(t, err)
+
+		query, err := rql.Parse(params, "users")
+		require.NoError(t, err)
+
+		sql, args, err := query.ToSQL()
+		require.NoError(t, err)
+		assert.Contains(t, sql, "WHERE ((age >= $1 AND status = $2) OR role = $3)")
+		assert.Equal(t, []any{18, "active", "admin"}, args)
+	})
+
+	t.Run("works with validation and PostgreSQL placeholders", func(t *testing.T) {
+		t.Parallel()
+		rql := restql.NewRestQL(restql.WithPlaceholder("$1"))
+
+		params, err := url.ParseQuery("filter=age>18&limit=50")
+		require.NoError(t, err)
+
+		query, err := rql.Parse(params, "users",
+			restql.WithAllowedFields([]string{"age"}),
+			restql.WithMaxLimit(100),
+		)
+		require.NoError(t, err)
+
+		sql, args, err := query.ToSQL()
+		require.NoError(t, err)
+		assert.Contains(t, sql, "WHERE age > $1")
+		assert.Contains(t, sql, "LIMIT 50")
+		assert.Equal(t, []any{18}, args)
 	})
 }
