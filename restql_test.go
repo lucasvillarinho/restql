@@ -4,9 +4,10 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/lucasvillarinho/restql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/lucasvillarinho/restql"
 )
 
 func TestNewRestQL(t *testing.T) {
